@@ -62,7 +62,7 @@ class PigeonServer(BaseHTTPRequestHandler) :
 
 
 if __name__ == "__main__":        
-    webServer = HTTPServer(('', 80), PigeonServer)
+    webServer = HTTPServer(('', process.env.PORT || 8080), PigeonServer)
 
     try:
         webServer.serve_forever()
