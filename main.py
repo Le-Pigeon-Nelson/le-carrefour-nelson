@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import shutil
+import os
 from http.server import *
 from urllib.parse import parse_qs
 from pigeon import *
@@ -62,7 +63,8 @@ class PigeonServer(BaseHTTPRequestHandler) :
 
 
 if __name__ == "__main__":        
-    webServer = HTTPServer(('', process.env.PORT), PigeonServer)
+    webServer = HTTPServer(('', int(os.environ.get("PORT", 8080))), 
+PigeonServer)
 
     try:
         webServer.serve_forever()
