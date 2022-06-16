@@ -60,6 +60,11 @@ class PigeonServer(BaseHTTPRequestHandler) :
                 self.send_header("Content-type", "text/json")
                 self.end_headers()
                 self.wfile.write(bytes(pigeon.getJson(), "UTF-8"))
+            else :
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(bytes("<p>Pigeon ready !</p>", "UTF-8"))
 
 
 if __name__ == "__main__":        
