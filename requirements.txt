@@ -1,2 +1,2 @@
-crossroads-description
+crossroads-description==0.4
 scipy
