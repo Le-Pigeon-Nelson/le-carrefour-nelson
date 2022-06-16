@@ -2,6 +2,7 @@
 
 import shutil
 import os
+import requests
 from http.server import *
 from urllib.parse import parse_qs
 from pigeon import *
@@ -25,10 +26,14 @@ class PigeonServer(BaseHTTPRequestHandler) :
                 latitude=float(params["lat"][0])
                 longitude=float(params["lng"][0])
 
+                r = requests.get("https://www.openstreetmap.org/api/0.6/map?bbox=%s,%s,%s,%s"%(longitude-0.002,latitude-0.002,longitude+0.002,latitude+0.002), allow_redirects=True)
+                open('osm.xml', 'wb').write(r.content)
+
                 # OSMnx configuration
                 ox.config(use_cache=True, useful_tags_way = list(set(ox.settings.useful_tags_way + cg.way_tags_to_keep)), useful_tags_node = list(set(ox.settings.useful_tags_node + cg.node_tags_to_keep)))
 
-                G = ox.graph_from_point((latitude, longitude), dist=50, network_type="all", retain_all=False, truncate_by_edge=True, simplify=False)
+                G = ox.graph_from_xml("osm.xml", simplify=False)
+                #G = ox.graph_from_point((latitude, longitude), dist=50, network_type="all", retain_all=False, truncate_by_edge=True, simplify=False)
 
                 # graph segmentation (from https://gitlab.limos.fr/jmafavre/crossroads-segmentation/-/blob/master/src/get-crossroad-description.py)
 
@@ -42,7 +47,7 @@ class PigeonServer(BaseHTTPRequestHandler) :
                 seg.to_json("data/intersection.json", longitude, latitude)
 
                 desc = cd.Description()
-                desc.computeModel(G, "data/intersection.json", None)
+                desc.computeModel(G, "data/intersection.json", "osm.xml")
                 description = desc.generateDescription()["structure"]
                 print(description)
 
