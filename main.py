@@ -3,6 +3,7 @@
 import shutil
 import os
 import requests
+from socketserver import ThreadingMixIn
 from http.server import *
 from urllib.parse import parse_qs
 from pigeon import *
@@ -10,6 +11,9 @@ import osmnx as ox
 import crseg.segmentation as cs
 import crdesc.description as cd
 import crdesc.config as cg
+
+class ThreadingServer(ThreadingMixIn, HTTPServer):
+    pass
 
 class PigeonServer(BaseHTTPRequestHandler) :
 
@@ -75,9 +79,9 @@ class PigeonServer(BaseHTTPRequestHandler) :
                 self.printReady()
 
 
-if __name__ == "__main__":        
-    webServer = HTTPServer(('', int(os.environ.get("PORT", 8080))), 
-PigeonServer)
+if __name__ == "__main__":      
+    
+    webServer = ThreadingServer(('', int(os.environ.get("PORT", 8080))), PigeonServer)
 
     try:
         webServer.serve_forever()
