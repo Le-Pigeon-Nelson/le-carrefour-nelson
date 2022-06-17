@@ -17,11 +17,13 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
 
 class PigeonServer(BaseHTTPRequestHandler) :
 
-        def printReady(self):
+        pigeon = PigeonNelson("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
+
+        def sendPigeon(self):
             self.send_response(200)
-            self.send_header("Content-type", "text/html")
+            self.send_header("Content-type", "text/json")
             self.end_headers()
-            self.wfile.write(bytes("<p>Pigeon ready !</p>", "UTF-8"))
+            self.wfile.write(bytes(self.pigeon.getJson(), "UTF-8"))
 
         def generateDescription(self, uid, latitude, longitude):
             r = requests.get("https://www.openstreetmap.org/api/0.6/map?bbox=%s,%s,%s,%s"%(longitude-0.002,latitude-0.002,longitude+0.002,latitude+0.002), allow_redirects=True)
@@ -54,13 +56,7 @@ class PigeonServer(BaseHTTPRequestHandler) :
                 text += crossing_desc + "\n"
 
             # create Pigeon Nelson
-            pigeon = PigeonNelson("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
-            pigeon.setMessage(text, "fr", 1)
-
-            self.send_response(200)
-            self.send_header("Content-type", "text/json")
-            self.end_headers()
-            self.wfile.write(bytes(pigeon.getJson(), "UTF-8"))
+            self.pigeon.setMessage(text, "fr", 1)
 
         def do_GET(self) :     
             params = {}
@@ -75,8 +71,9 @@ class PigeonServer(BaseHTTPRequestHandler) :
                 for dir in  folders : shutil.rmtree(dir, ignore_errors=True), shutil.os.mkdir(dir) 
                 
                 self.generateDescription(uid, latitude, longitude)
+                self.sendPigeon()
             else :
-                self.printReady()
+                self.sendPigeon()
 
 
 if __name__ == "__main__":      
