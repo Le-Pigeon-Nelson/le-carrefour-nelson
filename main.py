@@ -38,15 +38,13 @@ class PigeonServer(BaseHTTPRequestHandler) :
 
             # remove sidewalks, cycleways, service ways
             G = cs.Segmentation.remove_footways_and_parkings(G, False)
-            # build an undirected version of the graph
-            G = ox.utils_graph.get_undirected(G)
             # segment it using topology and semantic
-            seg = cs.Segmentation(G, C0 = 1, C1 = 2, C2 = 4, max_cycle_elements = 10)
+            seg = cs.Segmentation(ox.utils_graph.get_undirected(G), C0 = 2, C1 = 2, C2 = 4, max_cycle_elements = 10)
             seg.process()
             seg.to_json(uid+"/intersection.json", longitude, latitude)
 
             desc = cd.Description()
-            desc.computeModel(G, uid+"/intersection.json", uid+"/osm.xml")
+            desc.computeModel(G, uid+"/intersection.json")
             description = desc.generateDescription()["structure"]
 
             text = description["general_desc"] + "\n"
