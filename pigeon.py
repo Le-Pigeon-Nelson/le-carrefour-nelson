@@ -11,6 +11,10 @@ class PigeonNelson:
                 "period": period
             }
         ]
+        self.init = self.json
+
+    def clear(self):
+        self.json = self.init
 
     def setMessage(self, message, language, priority):
         self.json.append({

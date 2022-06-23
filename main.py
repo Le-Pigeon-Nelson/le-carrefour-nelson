@@ -18,12 +18,20 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
 class PigeonServer(BaseHTTPRequestHandler) :
 
         pigeon = PigeonNelson("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
+        html = open("index.html").read()
+
+        def sendHTML(self):
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(bytes(self.html, "UTF-8"))
 
         def sendPigeon(self):
             self.send_response(200)
             self.send_header("Content-type", "text/json")
             self.end_headers()
             self.wfile.write(bytes(self.pigeon.getJson(), "UTF-8"))
+            self.pigeon.clear()
 
         def generateDescription(self, uid, latitude, longitude):
             r = requests.get("https://www.openstreetmap.org/api/0.6/map?bbox=%s,%s,%s,%s"%(longitude-0.002,latitude-0.002,longitude+0.002,latitude+0.002), allow_redirects=True)
@@ -60,18 +68,23 @@ class PigeonServer(BaseHTTPRequestHandler) :
             params = {}
             if '?' in self.path:
                 params = parse_qs(self.path.split('?')[1])
-                latitude=float(params["lat"][0])
-                longitude=float(params["lng"][0])
-                uid = params["uid"][0]
+                if "self-description" in params.keys():
+                    self.sendPigeon()
+                elif "lat" in params.keys() and "lng" in params.keys() and "uid" in params.keys():
+                    latitude=float(params["lat"][0])
+                    longitude=float(params["lng"][0])
+                    uid = params["uid"][0]
 
-                # create / clean basic folder structure
-                folders = [uid]
-                for dir in  folders : shutil.rmtree(dir, ignore_errors=True), shutil.os.mkdir(dir) 
-                
-                self.generateDescription(uid, latitude, longitude)
-                self.sendPigeon()
+                    # create / clean basic folder structure
+                    folders = [uid]
+                    for dir in  folders : shutil.rmtree(dir, ignore_errors=True), shutil.os.mkdir(dir) 
+                    
+                    self.generateDescription(uid, latitude, longitude)
+                    self.sendPigeon()
+                else:
+                    self.sendHTML()
             else :
-                self.sendPigeon()
+                self.sendHTML()
 
 
 if __name__ == "__main__":      
