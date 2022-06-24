@@ -31,7 +31,7 @@ class PigeonServer(BaseHTTPRequestHandler) :
             self.send_header("Content-type", "text/json")
             self.end_headers()
             self.wfile.write(bytes(self.pigeon.getJson(), "UTF-8"))
-            self.pigeon.clear()
+            self.pigeon.__init__("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
 
         def generateDescription(self, uid, latitude, longitude):
             r = requests.get("https://www.openstreetmap.org/api/0.6/map?bbox=%s,%s,%s,%s"%(longitude-0.002,latitude-0.002,longitude+0.002,latitude+0.002), allow_redirects=True)
@@ -63,6 +63,7 @@ class PigeonServer(BaseHTTPRequestHandler) :
 
             # create Pigeon Nelson
             self.pigeon.setMessage(text, "fr", 1)
+            self.pigeon.setGeoJson(desc.getGeoJSON(description))
 
         def do_GET(self) :     
             params = {}

@@ -11,10 +11,6 @@ class PigeonNelson:
                 "period": period
             }
         ]
-        self.init = self.json
-
-    def clear(self):
-        self.json = self.init
 
     def setMessage(self, message, language, priority):
         self.json.append({
@@ -22,6 +18,9 @@ class PigeonNelson:
             "lang": language,
             "priority": priority
         })
+
+    def setGeoJson(self, geojson):
+        self.json.append(geojson)
 
     def getJson(self):
         return json.dumps(self.json, ensure_ascii=False)
