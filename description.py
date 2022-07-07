@@ -9,14 +9,17 @@ def generateDescription(pigeon, uid, latitude : float, longitude : float):
     open("cache/"+uid+'/osm.xml', 'wb').write(r.content)
 
     # OSMnx configuration
-    ox.config(use_cache=True, useful_tags_way = list(set(ox.settings.useful_tags_way + cg.way_tags_to_keep)), useful_tags_node = list(set(ox.settings.useful_tags_node + cg.node_tags_to_keep)))
-
+    ox.settings.osm_xml_way_tags = ox.settings.osm_xml_way_tags + cg.way_tags_to_keep
+    ox.settings.useful_tags_way = ox.settings.useful_tags_way + cg.way_tags_to_keep
+    ox.settings.osm_xml_node_tags = ox.settings.osm_xml_way_tags + cg.node_tags_to_keep
+    ox.settings.useful_tags_node = ox.settings.useful_tags_way + cg.node_tags_to_keep
+    
     G = ox.graph_from_xml("cache/"+uid+"/osm.xml", simplify=False)
 
     # graph segmentation (from https://gitlab.limos.fr/jmafavre/crossroads-segmentation/-/blob/master/src/get-crossroad-description.py)
 
     # remove sidewalks, cycleways, service ways
-    G = cs.Segmentation.remove_footways_and_parkings(G, False)
+    G = cs.Segmentation.prepare_network(G)
     # segment it using topology and semantic
     seg = cs.Segmentation(ox.utils_graph.get_undirected(G), C0 = 2, C1 = 2, C2 = 4, max_cycle_elements = 10)
     seg.process()
