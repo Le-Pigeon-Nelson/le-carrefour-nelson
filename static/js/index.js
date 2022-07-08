@@ -1,6 +1,6 @@
 var map;
 var uid = Math.random().toString(36).slice(2);
-branch_colors = []; for(i = 0; i < 50; i++){branch_colors.push(randomColor())} 
+var branch_colors = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999"]
 nb_branch = 0
 var geojson_intersection = L.geoJSON(null, {
   // for lines
@@ -11,7 +11,7 @@ var geojson_intersection = L.geoJSON(null, {
         if(branch_number > nb_branch)
           nb_branch = branch_number
         return {
-          color: branch_colors[branch_number-1],
+          color: branch_colors[(branch_number-1)%branch_colors.length],
           weight : 5
         }
       case "crossing":
@@ -22,15 +22,15 @@ var geojson_intersection = L.geoJSON(null, {
         }
       default:
         return {
-          color: "#000000",
-          weight: 2
+          color: "#555555",
+          weight: 1
         }
     }
   },
   // for points
   pointToLayer: function(feature, coords) {
-    if(feature.properties.type == "crossing")
-      L.circle(coords, 1, {color: "#000000", fillColor: "#000000", fillOpacity: 1}).addTo(geojson_intersection)
+    if(feature.properties.type == "crosswalk")
+      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1}).addTo(geojson_intersection)
   }
 });
 
@@ -39,14 +39,13 @@ function getPigeon(e) {
   fetch(window.location.origin+"/pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&uid="+uid).then(function(response) {
     return response.json();
   }).then(function(data) {
-    branch_colors = []; for(i = 0; i < 50; i++){branch_colors.push(randomColor())}
     geojson_intersection.clearLayers()
     geojson_intersection.addData(JSON.parse(data[2]))
     legend = "Branche du carrefour : "
     for(i = 0; i < nb_branch; i++) {
-      legend += "<span style='color:"+branch_colors[i]+"'>––</span> "
+      legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "
     }
-    legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Traversée : <span style='color: #222222'>⬤ et - - -</span><br/><br/>"
+    legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Passage piéton : <span style='color: #222222'>⬤</span><br/>Traversée : <span style='color: #222222'>- - -</span><br/><br/><br/>"
     document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
     nb_branch = 0
   })
@@ -54,9 +53,10 @@ function getPigeon(e) {
 
 function init() {
   map= L.map('map', {attributionControl: false}).setView([46.8, 2.52], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '© OpenStreetMap'
+    attribution: '© OpenStreetMap',
+    opacity : 0.7
   }).addTo(map);
 
   L.control.attribution({
