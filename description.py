@@ -1,20 +1,12 @@
-import requests
+import tempfile
 import osmnx as ox
+import crseg.utils as u
 import crseg.segmentation as cs
 import crdesc.description as cd
 import crdesc.config as cg
 
-def generateDescription(pigeon, uid, latitude : float, longitude : float):
-    r = requests.get("https://www.openstreetmap.org/api/0.6/map?bbox=%s,%s,%s,%s"%(longitude-0.002,latitude-0.002,longitude+0.002,latitude+0.002), allow_redirects=True)
-    open("cache/"+uid+'/osm.xml', 'wb').write(r.content)
-
-    # OSMnx configuration
-    ox.settings.osm_xml_way_tags = ox.settings.osm_xml_way_tags + cg.way_tags_to_keep
-    ox.settings.useful_tags_way = ox.settings.useful_tags_way + cg.way_tags_to_keep
-    ox.settings.osm_xml_node_tags = ox.settings.osm_xml_way_tags + cg.node_tags_to_keep
-    ox.settings.useful_tags_node = ox.settings.useful_tags_way + cg.node_tags_to_keep
-    
-    G = ox.graph_from_xml("cache/"+uid+"/osm.xml", simplify=False)
+def generateDescription(pigeon, uid, latitude : float, longitude : float):  
+    G = u.Util.get_osm_data(latitude, longitude, 150, False, cg.way_tags_to_keep, cg.node_tags_to_keep, tempfile.NamedTemporaryFile(mode='w', delete=False, suffix=".xml", dir="cache/"+uid))
 
     # graph segmentation (from https://gitlab.limos.fr/jmafavre/crossroads-segmentation/-/blob/master/src/get-crossroad-description.py)
 
