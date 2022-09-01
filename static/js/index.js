@@ -40,7 +40,10 @@ function getPigeon(e) {
     return response.json();
   }).then(function(data) {
     geojson_intersection.clearLayers()
-    geojson_intersection.addData(JSON.parse(data[2]))
+    json_data = JSON.parse(data[2])
+    if(Object.keys(json_data).length > 0) {
+      geojson_intersection.addData(JSON.parse(data[2]))
+    }
     legend = "Branche du carrefour : "
     for(i = 0; i < nb_branch; i++) {
       legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "

@@ -29,7 +29,7 @@ def send_pigeon():
             generateDescription(pigeon, uid, float(lat), float(lng))
         except Exception as e:
             print(e)
-            pigeon.setMessage("Erreur lors de la génération de la description.", "fr", 1)
+            pigeon.setMessage("Erreur lors de la génération de la description. Veuillez essayer un autre carrefour.", "fr", 1)
             pigeon.setGeoJson("{}")
 
     return pigeon.getJson()
