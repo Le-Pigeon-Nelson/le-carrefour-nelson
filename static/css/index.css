@@ -18,7 +18,7 @@ header h1 {
   line-height: 1.2;
 }
 
-button {
+.button {
   border-radius: 8px;
   border: 2px solid #7EBC6F;
   background-color: #7EBC6F;
@@ -30,7 +30,7 @@ button {
   transition-duration: 0.4s;
 }
 
-button:hover {
+.button:hover {
   border-radius: 8px;
   border: 2px solid #7EBC6F;
   background-color: white;
@@ -40,6 +40,18 @@ button:hover {
   text-decoration: none;
   display: inline-block;
 
+}
+
+.button_disabled {
+  border-radius: 8px;
+  border: 2px solid #efefef;
+  background-color: #efefef;
+  color: rgb(83, 79, 79);
+  padding: 10px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition-duration: 0.4s;
 }
 
 #map { 
@@ -78,6 +90,10 @@ button:hover {
   grid-template-columns: 1fr;
   grid-template-rows: repeat(6, 1fr);
   display: none;
+}
+
+#settings_buttons {
+  margin-top: 10px;
 }
 
 .popup {

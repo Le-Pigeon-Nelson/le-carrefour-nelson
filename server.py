@@ -53,7 +53,7 @@ def send_pigeon():
         shutil.rmtree("cache/"+uid, ignore_errors=True), shutil.os.mkdir("cache/"+uid)
         error = None
         try:
-            generateDescription(pigeon, uid, float(lat), float(lng), int(c0), int(c1), int(c2))
+            generateDescription(pigeon, uid, float(lat), float(lng), float(c0), float(c1), float(c2))
         except Exception as e:
             error = traceback.format_exc()
             pigeon.setMessage("Erreur lors de la génération de la description. Veuillez essayer un autre carrefour.", "fr", 1)

@@ -2,6 +2,7 @@ var map;
 var uid = Math.random().toString(36).slice(2);
 var branch_colors = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999"]
 nb_branch = 0
+coords = null
 var geojson_intersection = L.geoJSON(null, {
   // for lines
   style : function(feature) {
@@ -35,6 +36,7 @@ var geojson_intersection = L.geoJSON(null, {
 });
 
 function getPigeon(e) {
+  disableReload()
   coords = e.latlng
   c0 = document.getElementById("C0").value
   c1 = document.getElementById("C1").value
@@ -57,6 +59,22 @@ function getPigeon(e) {
   })
 }
 
+function reloadPigeon() {
+  getPigeon({latlng : coords})
+}
+
+function enableReload() {
+  reload_button = document.getElementById("reload_button")
+  reload_button.disabled = false
+  reload_button.className = "button"
+}
+
+function disableReload() {
+  reload_button = document.getElementById("reload_button")
+  reload_button.disabled = true
+  reload_button.className = "button_disabled"
+}
+
 function toggleSettings() {
   settings = document.getElementById("settings")
   if(settings.style.display != "grid") {
@@ -70,6 +88,18 @@ function toggleSettings() {
 function updateSlider(slider, value) {
   document.getElementById(slider.id+"val").innerHTML = value
   slider.value = value
+  if(coords != null) {
+    enableReload()
+  }
+}
+
+function resetSliders() {
+  document.getElementById("C0").value = 2
+  document.getElementById("C1").value = 2
+  document.getElementById("C2").value = 4
+  document.getElementById("C0val").innerHTML = 2
+  document.getElementById("C1val").innerHTML = 2
+  document.getElementById("C2val").innerHTML = 4
 }
 
 function init() {
@@ -105,8 +135,6 @@ function init() {
     window.history.pushState({path: url}, '', url);
   });
 
-  document.getElementById("C0").value = 2
-  document.getElementById("C1").value = 2
-  document.getElementById("C2").value = 4
+  resetSliders()
 
 }
