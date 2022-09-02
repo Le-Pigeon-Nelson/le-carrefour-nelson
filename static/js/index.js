@@ -36,7 +36,10 @@ var geojson_intersection = L.geoJSON(null, {
 
 function getPigeon(e) {
   coords = e.latlng
-  fetch(window.location.origin+"/pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&uid="+uid).then(function(response) {
+  c0 = document.getElementById("C0").value
+  c1 = document.getElementById("C1").value
+  c2 = document.getElementById("C2").value
+  fetch(window.location.origin+"/pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid).then(function(response) {
     return response.json();
   }).then(function(data) {
     geojson_intersection.clearLayers()
@@ -52,6 +55,21 @@ function getPigeon(e) {
     document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
     nb_branch = 0
   })
+}
+
+function toggleSettings() {
+  settings = document.getElementById("settings")
+  if(settings.style.display != "grid") {
+    settings.style.display = "grid"
+    document.getElementById("content").scrollTop = document.getElementById("content").scrollHeight;
+  }
+  else
+    settings.style.display = "none"
+}
+
+function updateSlider(slider, value) {
+  document.getElementById(slider.id+"val").innerHTML = value
+  slider.value = value
 }
 
 function init() {
@@ -86,5 +104,9 @@ function init() {
     url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params;
     window.history.pushState({path: url}, '', url);
   });
+
+  document.getElementById("C0").value = 2
+  document.getElementById("C1").value = 2
+  document.getElementById("C2").value = 4
 
 }

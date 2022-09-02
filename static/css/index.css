@@ -68,6 +68,30 @@ button:hover {
   padding: 10px;
 }
 
+#advanced {
+  padding: 10px;
+}
+
+#settings {
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(6, 1fr);
+  display: none;
+}
+
 .popup {
   text-align : center;
+}
+
+@media only screen and (min-width: 800px) {
+  #settings {
+    grid-template-columns: 0.5fr;
+  }
+}
+
+@media only screen and (min-width: 1024px) {
+  #settings {
+    grid-template-columns: 0.25fr;
+  }
 }

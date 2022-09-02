@@ -15,7 +15,20 @@
   <body onload=init()>
     <div id="map"></div>
     <div id="content">
-      <div id="text"></div>
+      <div id="text">
+        <p>Cliquez au centre d'un carrefour sur la carte pour en obtenir une description textuelle. La carte affiche la segmentation du carrefour décrit.<br/><br/>Vous pouvez utiliser les réglages avancés si la segmentation du carrefour est incorrecte, en jouant en priorité sur le rayon élémentaire.</p>
+      </div>
+      <div id="advanced">
+        <button id="advanced_button" onclick=toggleSettings()>Avancé</button>
+        <div id="settings">
+          <span><label>Rayon élémentaire (C0) : </label><label id="C0val">2</label></span>
+          <input id="C0" class="slider" type="range" id="volume" name="volume" min="1" max="10" value="2" oninput="updateSlider(this, this.value)">
+          <span><label>Distance de fusion (C1) : </label><label id="C1val">2</label></span>
+          <input id="C1" class="slider" type="range" id="volume" name="volume" min="1" max="10" value="2" oninput="updateSlider(this, this.value)">
+          <span><label>Longueur boucle de fusion (C2) : </label><label id="C2val">4</label></span>
+          <input id="C2" class="slider" type="range" id="volume" name="volume" min="1" max="8" value="4" oninput="updateSlider(this, this.value)">
+        </div>
+      </div>
     </div>
   </body>
 </html> 
