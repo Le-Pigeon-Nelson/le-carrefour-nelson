@@ -43,7 +43,7 @@ function getPigeon(e, comment="") {
   c2 = document.getElementById("C2").value
   comment = comment.replaceAll("\n", "%0A")
   args = "?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid
-  fetch(window.location.origin+"/pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment).then(function(response) {
+  fetch(window.location.origin+window.location.pathname+"pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment).then(function(response) {
     return response.json();
   }).then(function(data) {
     geojson_intersection.clearLayers()
