@@ -10,7 +10,7 @@ from pigeon import *
 from description import *
 from flask import Flask, request
 
-def log(uid, lat, lng, c0, c1, c2, error=None):
+def log(uid, lat, lng, c0, c1, c2, error=None, comment=None):
     xml = ""
     for file in shutil.os.listdir("cache/"+uid):
         if file.endswith('.xml'):
@@ -20,6 +20,8 @@ def log(uid, lat, lng, c0, c1, c2, error=None):
     for lib in ["osmnx","crossroads-segmentation","crossroads-description"]:
         libraries += "%s %s\n"%(lib, version(lib))
     logfile = "DATE : %s\nPOSITION : %s %s\nC0 C1 C2 : %s %s %s\nLIBRARIES : \n%s"%(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), lat, lng, c0, c1, c2, libraries)
+    if comment:
+        logfile += "COMMENT : \n%s\n"%comment
     if error:
         logfile += "ERROR : \n%s"%error
     if xml:
@@ -45,7 +47,7 @@ def html():
 def send_pigeon():
 
     args = request.args
-    selfdescription, lat, lng, c0, c1, c2, uid = args.get("self-description"), args.get("lat"), args.get("lng"), args.get("c0"), args.get("c1"), args.get("c2"), args.get("uid")
+    selfdescription, lat, lng, c0, c1, c2, uid, comment = args.get("self-description"), args.get("lat"), args.get("lng"), args.get("c0"), args.get("c1"), args.get("c2"), args.get("uid"), args.get("comment")
 
     pigeon = PigeonNelson("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
 
@@ -58,8 +60,10 @@ def send_pigeon():
             error = traceback.format_exc()
             pigeon.setMessage("Erreur lors de la génération de la description. Veuillez essayer un autre carrefour.", "fr", 1)
             pigeon.setGeoJson("{}")
-        
-        log(uid, lat, lng, c0, c1, c2, error)
+
+        if len(comment) == 0 : comment = None
+
+        log(uid, lat, lng, c0, c1, c2, error, comment)
 
     return pigeon.getJson()
 
