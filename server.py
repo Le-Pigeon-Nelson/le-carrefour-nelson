@@ -49,6 +49,11 @@ def send_pigeon():
     args = request.args
     selfdescription, lat, lng, c0, c1, c2, uid, comment = args.get("self-description"), args.get("lat"), args.get("lng"), args.get("c0"), args.get("c1"), args.get("c2"), args.get("uid"), args.get("comment")
 
+    if c0 is None or c1 is None or c2 is None:
+        c0 = 2
+        c1 = 2
+        c2 = 4
+
     pigeon = PigeonNelson("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
 
     if lat and lng and uid:
@@ -60,8 +65,8 @@ def send_pigeon():
             error = traceback.format_exc()
             pigeon.setMessage("Erreur lors de la génération de la description. Veuillez essayer un autre carrefour.", "fr", 1)
             pigeon.setGeoJson("{}")
-
-        if len(comment) == 0 : comment = None
+            
+        if comment is not None and len(comment) == 0 : comment = None
 
         log(uid, lat, lng, c0, c1, c2, error, comment)
 
