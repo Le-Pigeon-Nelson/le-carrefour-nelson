@@ -3,6 +3,7 @@ var uid = Math.random().toString(36).slice(2);
 var branch_colors = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999"]
 nb_branch = 0
 coords = null
+requesting = false
 var geojson_intersection = L.geoJSON(null, {
   // for lines
   style : function(feature) {
@@ -36,33 +37,47 @@ var geojson_intersection = L.geoJSON(null, {
 });
 
 function getPigeon(e, comment="") {
-  disableReload()
-  coords = e.latlng
-  c0 = document.getElementById("C0").value
-  c1 = document.getElementById("C1").value
-  c2 = document.getElementById("C2").value
-  comment = comment.replaceAll("\n", "%0A")
-  args = "?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid
-  fetch(window.location.origin+window.location.pathname+"pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment).then(function(response) {
-    return response.json();
-  }).then(function(data) {
-    geojson_intersection.clearLayers()
-    json_data = JSON.parse(data[2])
-    if(Object.keys(json_data).length > 0) {
-      geojson_intersection.addData(JSON.parse(data[2]))
-    }
-    legend = "Branche du carrefour : "
-    for(i = 0; i < nb_branch; i++) {
-      legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "
-    }
-    legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Passage piéton : <span style='color: #222222'>⬤</span><br/>Traversée : <span style='color: #222222'>- - -</span><br/><br/><br/>"
-    document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
-    nb_branch = 0
+  if(!requesting){
+    requesting = true
+    disableReload()
+    coords = e.latlng
+    c0 = document.getElementById("C0").value
+    c1 = document.getElementById("C1").value
+    c2 = document.getElementById("C2").value
+    comment = comment.replaceAll("\n", "%0A")
+    args = "?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid
+    content = document.getElementById("content").innerHTML
+    document.getElementById("content").innerHTML = '<div id="loading" class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>'
+    fetchTimeout(window.location.origin+window.location.pathname+"pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment, 10000).then(function(response) {
+      return response.json();
+    }).then(function(data) {
+      document.getElementById("content").innerHTML = content
+      document.getElementById("content").scrollTop = scroll
+      geojson_intersection.clearLayers()
+      json_data = JSON.parse(data[2])
+      if(Object.keys(json_data).length > 0) {
+        geojson_intersection.addData(JSON.parse(data[2]))
+      }
+      legend = "Branche du carrefour : "
+      for(i = 0; i < nb_branch; i++) {
+        legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "
+      }
+      legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Passage piéton : <span style='color: #222222'>⬤</span><br/>Traversée : <span style='color: #222222'>- - -</span><br/><br/><br/>"
+      document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
+      nb_branch = 0
 
-    if(comment != "")
-      document.getElementById("comment_text").value = ""
-    updateSendButton(document.getElementById("comment_text").value)
-  })
+      if(comment != "") {
+        document.getElementById("comment_text").value = ""
+        document.getElementById("text").innerHTML = "Votre commentaire a bien été envoyé."
+      }
+      updateSendButton(document.getElementById("comment_text").value)
+      requesting = false
+    }).catch(error => {
+      document.getElementById("content").innerHTML = content
+      document.getElementById("text").innerHTML = "Le serveur n'a pas répondu. Veuillez réessayer ultérieurement."
+      requesting = false
+    })
+  }
 }
 
 function reloadPigeon() {
