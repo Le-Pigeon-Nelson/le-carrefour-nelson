@@ -52,7 +52,9 @@ function getPigeon(e, comment="") {
       return response.json();
     }).then(function(data) {
       document.getElementById("content").innerHTML = content
-      document.getElementById("content").scrollTop = scroll
+      document.getElementById("C0").value = c0
+      document.getElementById("C1").value = c1
+      document.getElementById("C2").value = c2
       geojson_intersection.clearLayers()
       json_data = JSON.parse(data[2])
       if(Object.keys(json_data).length > 0) {
@@ -74,6 +76,9 @@ function getPigeon(e, comment="") {
       requesting = false
     }).catch(error => {
       document.getElementById("content").innerHTML = content
+      document.getElementById("C0").value = c0
+      document.getElementById("C1").value = c1
+      document.getElementById("C2").value = c2
       document.getElementById("text").innerHTML = "Le serveur n'a pas répondu. Veuillez réessayer ultérieurement."
       requesting = false
     })
