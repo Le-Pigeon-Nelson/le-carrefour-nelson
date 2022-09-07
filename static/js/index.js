@@ -4,43 +4,50 @@ var branch_colors = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33"
 nb_branch = 0
 coords = null
 requesting = false
-var geojson_intersection = L.geoJSON(null, {
-  // for lines
+
+/* Data files */
+var geojson_intersection = L.geoJSON(null)
+geojson = {}
+geojson.ways = L.geoJSON(null, {
+  style : {color: "#555555", weight: 1}
+})
+geojson.branch = L.geoJSON(null, {
   style : function(feature) {
-    switch(feature.properties.type) {
-      case "branch":
-        branch_number = parseInt(feature.properties.name.substr(9).split("|")[0].trim())
-        if(branch_number > nb_branch)
-          nb_branch = branch_number
-        return {
-          color: branch_colors[(branch_number-1)%branch_colors.length],
-          weight : 5
-        }
-      case "crossing":
-        return {
-          color: "#222222",
-          weight: 2,
-          dashArray : "5, 5"
-        }
-      default:
-        return {
-          color: "#555555",
-          weight: 1
-        }
+    branch_number = parseInt(feature.properties.name.substr(9).split("|")[0].trim())
+    if(branch_number > nb_branch)
+      nb_branch = branch_number
+    return {
+      color: branch_colors[(branch_number-1)%branch_colors.length],
+      weight : 5
     }
-  },
-  // for points
-  pointToLayer: function(feature, coords) {
-    if(feature.properties.type == "crosswalk")
-      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1})
-      .bindPopup(feature.properties.description)
-      .addTo(geojson_intersection)
   },
   onEachFeature: function(feature, layer) {
     layer.bindPopup(feature.properties.description)
   }
 })
+geojson.crossing_shadow = L.geoJSON(null, {
+  style : {color: "#ffffff", weight: 5, opacity: 0},
+  onEachFeature: function(feature, layer) {
+    layer.bindPopup(feature.properties.description)
+  }
+})
+geojson.crossing = L.geoJSON(null, {
+  style : {color: "#222222", weight: 2, dashArray : "5, 5"},
+  onEachFeature: function(feature, layer) {
+    layer.bindPopup(feature.properties.description)
+  }
+})
+geojson.crosswalk = L.geoJSON(null, {
+  style: {weight: 0},
+  pointToLayer: function(feature, coords) {
+    if(feature.properties.type == "crosswalk")
+      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1})
+      .bindPopup(feature.properties.description)
+      .addTo(geojson.crosswalk)
+  }
+})
 
+/* Core function */
 function getPigeon(e, comment="") {
   if(!requesting){
     requesting = true
@@ -60,11 +67,43 @@ function getPigeon(e, comment="") {
       document.getElementById("C0").value = c0
       document.getElementById("C1").value = c1
       document.getElementById("C2").value = c2
+
+      // Clear layers
       geojson_intersection.clearLayers()
+      for(id of Object.keys(geojson)) {
+        geojson[id].clearLayers()
+      }
+
+      // Add new layers
       json_data = JSON.parse(data[2])
       if(Object.keys(json_data).length > 0) {
         geojson_intersection.addData(JSON.parse(data[2]))
       }
+      geojson_intersection.eachLayer(function(layer) {
+          switch(layer.feature.properties.type) {
+            case "branch":
+              geojson.branch.addData(layer.feature)
+              break
+            case "crosswalk":
+              geojson.crosswalk.addData(layer.feature)
+              break
+            case "crossing":
+              if(layer.feature.geometry.type == "LineString") {
+                geojson.crossing_shadow.addData(layer.feature)
+                geojson.crossing.addData(layer.feature)
+              }
+              break
+            case "way":
+              geojson.ways.addData(layer.feature)
+              break
+          }
+      })
+
+      // Reorder layers
+      for(id of Object.keys(geojson)) {
+        geojson[id].bringToFront()
+      }
+
       legend = "Branche du carrefour : "
       for(i = 0; i < nb_branch; i++) {
         legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "
@@ -172,7 +211,9 @@ function init() {
     position: 'topright'
   }).addTo(map);
 
-  geojson_intersection.addTo(map);
+  for(id of Object.keys(geojson)) {
+    geojson[id].addTo(map)
+  }
 
   map.on("click", getPigeon);
 
