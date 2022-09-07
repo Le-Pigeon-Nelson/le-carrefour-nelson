@@ -52,17 +52,25 @@ function getPigeon(e, comment="") {
   if(!requesting){
     requesting = true
     disableReload()
+
+    // Fetch parameters
     coords = e.latlng
     c0 = document.getElementById("C0").value
     c1 = document.getElementById("C1").value
     c2 = document.getElementById("C2").value
     comment = comment.replaceAll("\n", "%0A")
     args = "?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid
+
+    // Replace content with loading animation
     content = document.getElementById("content").innerHTML
     document.getElementById("content").innerHTML = '<div id="loading" class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>'
+    
+    // Fetch data from the API. Timeout of 10s.
     fetchTimeout(window.location.origin+window.location.pathname+"pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment, 10000).then(function(response) {
       return response.json();
     }).then(function(data) {
+
+      // Put the content back on the page
       document.getElementById("content").innerHTML = content
       document.getElementById("C0").value = c0
       document.getElementById("C1").value = c1
@@ -104,6 +112,7 @@ function getPigeon(e, comment="") {
         geojson[id].bringToFront()
       }
 
+      // Update content according to fetched data
       legend = "Branche du carrefour : "
       for(i = 0; i < nb_branch; i++) {
         legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "
@@ -112,10 +121,13 @@ function getPigeon(e, comment="") {
       document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
       nb_branch = 0
 
+      // Display a message to indicate that the comment was sent 
       if(comment != "") {
         document.getElementById("comment_text").value = ""
         document.getElementById("text").innerHTML = "Votre commentaire a bien été envoyé."
       }
+
+      // Update UI elements and enable to request again
       updateSendButton(document.getElementById("comment_text").value)
       requesting = false
     }).catch(error => {
@@ -129,9 +141,38 @@ function getPigeon(e, comment="") {
   }
 }
 
+/* Handler functions */
+
 function reloadPigeon() {
   getPigeon({latlng : coords})
 }
+
+function sendComment() {
+  comment = document.getElementById("comment_text").value
+  getPigeon({latlng : coords}, comment)
+}
+
+function toggleComment() {
+  comment = document.getElementById("comment")
+  if(comment.style.display != "grid") {
+    comment.style.display = "grid"
+    document.getElementById("content").scrollTop = document.getElementById("content").scrollHeight;
+  }
+  else
+    comment.style.display = "none"  
+}
+
+function toggleSettings() {
+  settings = document.getElementById("settings")
+  if(settings.style.display != "grid") {
+    settings.style.display = "grid"
+    document.getElementById("content").scrollTop = document.getElementById("content").scrollHeight;
+  }
+  else
+    settings.style.display = "none"
+}
+
+/* UI updating functions */
 
 function enableReload() {
   reload_button = document.getElementById("reload_button")
@@ -145,16 +186,6 @@ function disableReload() {
   reload_button.className = "button_disabled"
 }
 
-function toggleComment() {
-  comment = document.getElementById("comment")
-  if(comment.style.display != "grid") {
-    comment.style.display = "grid"
-    document.getElementById("content").scrollTop = document.getElementById("content").scrollHeight;
-  }
-  else
-    comment.style.display = "none"  
-}
-
 function updateSendButton(message) {
   send_button = document.getElementById("send_button")
   if(message.trim().length > 0 && coords != null) {
@@ -165,21 +196,6 @@ function updateSendButton(message) {
     send_button.className = "button_disabled"
     send_button.disabled = true
   }
-}
-
-function sendComment() {
-  comment = document.getElementById("comment_text").value
-  getPigeon({latlng : coords}, comment)
-}
-
-function toggleSettings() {
-  settings = document.getElementById("settings")
-  if(settings.style.display != "grid") {
-    settings.style.display = "grid"
-    document.getElementById("content").scrollTop = document.getElementById("content").scrollHeight;
-  }
-  else
-    settings.style.display = "none"
 }
 
 function updateSlider(slider, value) {
@@ -199,24 +215,29 @@ function resetSliders() {
   document.getElementById("C2val").innerHTML = 4
 }
 
+/* Initialisation function */
 function init() {
+
+  // Init map and controls
   map= L.map('map', {attributionControl: false}).setView([46.8, 2.52], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap',
     opacity : 0.7
   }).addTo(map);
-
   L.control.attribution({
     position: 'topright'
   }).addTo(map);
 
+  // Add layers to map
   for(id of Object.keys(geojson)) {
     geojson[id].addTo(map)
   }
 
+  // Enable interaction on the map to get the description
   map.on("click", getPigeon);
 
+  // Add view parameters to the window, mainly to keep the current view on reload
   params = new URLSearchParams(window.location.search);
   try {
     params = params.get("map").split("/")
@@ -227,13 +248,13 @@ function init() {
   } catch {
     map.setView([47.123,4.658], 6);
   }
-
   map.on('moveend zoomend', function() {
     params = "map="+map.getZoom()+"/"+map.getCenter().lat+"/"+map.getCenter().lng
     url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params;
     window.history.pushState({path: url}, '', url);
   });
 
+  // Reinit some UI elements
   document.getElementById("comment_text").value = ""
   resetSliders()
 
