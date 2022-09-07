@@ -75,6 +75,8 @@ function getPigeon(e, comment="") {
       document.getElementById("C0").value = c0
       document.getElementById("C1").value = c1
       document.getElementById("C2").value = c2
+      document.getElementById("download_button").disabled = false
+      document.getElementById("download_button").className = "button"
 
       // Clear layers
       geojson_intersection.clearLayers()
@@ -136,6 +138,8 @@ function getPigeon(e, comment="") {
       document.getElementById("C1").value = c1
       document.getElementById("C2").value = c2
       document.getElementById("text").innerHTML = "Le serveur n'a pas répondu. Veuillez réessayer ultérieurement."
+      document.getElementById("download_button").disabled = true
+      document.getElementById("download_button").className = "button_disabled"
       requesting = false
     })
   }
@@ -150,6 +154,17 @@ function reloadPigeon() {
 function sendComment() {
   comment = document.getElementById("comment_text").value
   getPigeon({latlng : coords}, comment)
+}
+
+function downloadData() {
+    data = JSON.stringify(geojson_intersection.toGeoJSON())
+    data_holder = document.createElement('a');
+    data_holder.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+    data_holder.setAttribute('download', "carrefour.geojson");
+    data_holder.style.display = 'none';
+    document.body.appendChild(data_holder);
+    data_holder.click();
+    document.body.removeChild(data_holder);
 }
 
 function toggleComment() {

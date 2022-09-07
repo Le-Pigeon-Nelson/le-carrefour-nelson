@@ -24,19 +24,21 @@
         </p>
       </div>
       <div id="advanced">
-        <button id="comment_button" class="button" onclick=toggleComment()>Commentaire</button> <button id="advanced_button" class="button" onclick=toggleSettings()>Avancé</button>
+        <button id="comment_button" class="button" onclick=toggleComment()>Commentaire</button><button id="advanced_button" class="button" onclick=toggleSettings()>Avancé</button>
         <div id="comment">
           <textarea id="comment_text" rows="4" oninput="updateSendButton(this.value)"></textarea>
           <span><button id="send_button" class="button_disabled" disabled onclick=sendComment()>Envoyer</button></span>
         </div>
         <div id="settings">
-          <span><label>Rayon élémentaire (C0) : </label><label id="C0val">2</label></span>
-          <input id="C0" class="slider" type="range" id="volume" name="volume" min="0.1" max="10" value="2" step="0.1" oninput="updateSlider(this, this.value)">
-          <span><label>Distance de fusion (C1) : </label><label id="C1val">2</label></span>
-          <input id="C1" class="slider" type="range" id="volume" name="volume" min="0.1" max="10" value="2" step="0.1" oninput="updateSlider(this, this.value)">
-          <span><label>Longueur boucle de fusion (C2) : </label><label id="C2val">4</label></span>
-          <input id="C2" class="slider" type="range" id="volume" name="volume" min="0.1" max="8" value="4" step="0.1" oninput="updateSlider(this, this.value)">
-          <span id="settings_buttons"""><button id="reload_button" class="button_disabled" disabled onclick=reloadPigeon()>Recharger</button> <button id="reset_button" class="button" onclick=resetSliders()>Réinitialiser</button></span>
+          <div id="settings_content">
+            <span><label>Rayon élémentaire (C0) : </label><label id="C0val">2</label></span>
+            <input id="C0" class="slider" type="range" id="volume" name="volume" min="0.1" max="10" value="2" step="0.1" oninput="updateSlider(this, this.value)">
+            <span><label>Distance de fusion (C1) : </label><label id="C1val">2</label></span>
+            <input id="C1" class="slider" type="range" id="volume" name="volume" min="0.1" max="10" value="2" step="0.1" oninput="updateSlider(this, this.value)">
+            <span><label>Longueur boucle de fusion (C2) : </label><label id="C2val">4</label></span>
+            <input id="C2" class="slider" type="range" id="volume" name="volume" min="0.1" max="8" value="4" step="0.1" oninput="updateSlider(this, this.value)">
+          </div>
+          <span id="settings_buttons"><button id="reload_button" class="button_disabled" disabled onclick=reloadPigeon()>Recharger</button><button id="reset_button" class="button" onclick=resetSliders()>Réinitialiser</button><button id="download_button" class="button_disabled" disabled onclick=downloadData()>Télécharger</button></span>
         </div>
       </div>
     </div>
