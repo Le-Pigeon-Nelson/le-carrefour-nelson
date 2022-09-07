@@ -32,9 +32,14 @@ var geojson_intersection = L.geoJSON(null, {
   // for points
   pointToLayer: function(feature, coords) {
     if(feature.properties.type == "crosswalk")
-      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1}).addTo(geojson_intersection)
+      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1})
+      .bindPopup(feature.properties.description)
+      .addTo(geojson_intersection)
+  },
+  onEachFeature: function(feature, layer) {
+    layer.bindPopup(feature.properties.description)
   }
-});
+})
 
 function getPigeon(e, comment="") {
   if(!requesting){
