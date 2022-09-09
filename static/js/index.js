@@ -252,25 +252,39 @@ function init() {
   // Enable interaction on the map to get the description
   map.on("click", getPigeon);
 
-  // Add view parameters to the window, mainly to keep the current view on reload
-  params = new URLSearchParams(window.location.search);
+  // Reinit some UI elements
+  document.getElementById("comment_text").value = ""
+  resetSliders()
+
+  // Load url parameters
+  url_params = new URLSearchParams(window.location.search);
+
+  // Add a request parameter to enable requesting upon loading
   try {
-    params = params.get("map").split("/")
-    z = Number(params[0])
-    x = Number(params[1])
-    y = Number(params[2])
-    map.setView([x,y], z);
+    params = url_params.get("request").split("/")
+    x = Number(params[0])
+    y = Number(params[1])
+    map.setView([x,y], 18);
+    coords = {lat : x, lng: y}
+    reloadPigeon()
   } catch {
-    map.setView([47.123,4.658], 6);
+    // Add view parameters to the window, mainly to keep the current view on reload
+    try {
+      params = url_params.get("map").split("/")
+      z = Number(params[0])
+      x = Number(params[1])
+      y = Number(params[2])
+      map.setView([x,y], z);
+    } catch {
+      map.setView([47.123,4.658], 6);
+    }
   }
+
+  // reencode the window location in the url
   map.on('moveend zoomend', function() {
     params = "map="+map.getZoom()+"/"+map.getCenter().lat+"/"+map.getCenter().lng
     url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params;
     window.history.pushState({path: url}, '', url);
   });
-
-  // Reinit some UI elements
-  document.getElementById("comment_text").value = ""
-  resetSliders()
 
 }
