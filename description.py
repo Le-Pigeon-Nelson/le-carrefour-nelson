@@ -2,8 +2,8 @@ import tempfile
 import osmnx as ox
 import crseg.utils as u
 import crseg.segmentation as cs
-import crdesc.description as cd
-import crdesc.config as cg
+import crossroadsdescription.description as cd
+import crossroadsdescription.config as cg
 
 def generateDescription(pigeon, uid, latitude : float, longitude : float, c0: float, c1: float, c2 : float):  
     G = u.Util.get_osm_data(latitude, longitude, 150, False, cg.way_tags_to_keep, cg.node_tags_to_keep, tempfile.NamedTemporaryFile(mode='w', delete=False, suffix=".xml", dir="cache/"+uid))

@@ -1,3 +1,3 @@
-crossroads-description==0.7.1
+crossroads-description==1.0
 scipy
 flask
