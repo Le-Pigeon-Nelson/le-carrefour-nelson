@@ -17,7 +17,7 @@ def log(uid, lat, lng, c0, c1, c2, error=None, comment=None):
             xml = "cache/%s/%s"%(uid,file)
             break
     libraries = ""
-    for lib in ["osmnx","crossroads-segmentation","crossroads-description"]:
+    for lib in ["osmnx","crossroads-segmentation","crmodel","crdesc"]:
         libraries += "%s %s\n"%(lib, version(lib))
     logfile = "DATE : %s\nPOSITION : %s %s\nC0 C1 C2 : %s %s %s\nLIBRARIES : \n%s"%(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), lat, lng, c0, c1, c2, libraries)
     if comment:

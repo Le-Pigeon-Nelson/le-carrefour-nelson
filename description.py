@@ -2,8 +2,9 @@ import tempfile
 import osmnx as ox
 import crseg.utils as u
 import crseg.segmentation as cs
-import crossroadsdescription.description as cd
-import crossroadsdescription.config as cg
+import crmodel.crmodel as cm
+import crmodel.config as cg
+import crdesc.crdesc as cd
 
 def generateDescription(pigeon, uid, latitude : float, longitude : float, c0: float, c1: float, c2 : float):  
     G = u.Util.get_osm_data(latitude, longitude, 150, False, cg.way_tags_to_keep, cg.node_tags_to_keep, tempfile.NamedTemporaryFile(mode='w', delete=False, suffix=".xml", dir="cache/"+uid))
@@ -17,8 +18,15 @@ def generateDescription(pigeon, uid, latitude : float, longitude : float, c0: fl
     seg.process()
     seg.to_json("cache/"+uid+"/intersection.json", longitude, latitude)
 
-    desc = cd.Description()
-    desc.computeModel(G, "cache/"+uid+"/intersection.json")
+    model = cm.CrModel()
+    model.computeModel(G, "cache/"+uid+"/intersection.json")
+
+    with open("cache/"+uid+"/model.json", "w") as f:
+        f.write(model.getJSON())
+        f.close()
+
+    desc = cd.CrDesc()
+    desc.loadModel("cache/"+uid+"/model.json")
     description = desc.generateDescription()["structure"]
 
     text = description["general_desc"] + "\n"
