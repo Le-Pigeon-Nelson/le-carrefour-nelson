@@ -5,7 +5,57 @@ nb_branch = 0
 coords = null
 requesting = false
 
+// Use geographic coordinates
+ol.proj.useGeographic()
+
 /* Data files */
+var geojson_intersection = new ol.layer.Vector({
+  source : new ol.source.Vector(),
+  style : function(feature, resolution) {
+    switch(feature.get("type")) {
+
+      case "branch":
+        branch_number = parseInt(feature.get("name").substr(9).split("|")[0].trim())
+        if(branch_number > nb_branch)
+          nb_branch = branch_number
+        return new ol.style.Style({
+          stroke : new ol.style.Stroke({
+            color: branch_colors[(branch_number-1)%branch_colors.length],
+            width : 5
+          })
+        });
+
+      case "crosswalk":
+        return new ol.style.Style({
+          image : new ol.style.Circle({
+            radius: 5,
+            fill: new ol.style.Fill({
+              color: 'black'
+            })
+          })
+        });
+
+      case "crossing":
+        return new ol.style.Style({
+          stroke : new ol.style.Stroke({
+            color: 'black',
+            width: 2,
+            lineDash: [6,6]
+          })
+        });
+        break;
+
+      case "way":
+        return new ol.style.Style({
+          stroke : new ol.style.Stroke({
+            color: 'black',
+          })
+        });
+
+    }
+  }
+});
+/*
 var geojson_intersection = L.geoJSON(null)
 geojson = {}
 geojson.ways = L.geoJSON(null, {
@@ -46,6 +96,7 @@ geojson.crosswalk = L.geoJSON(null, {
       .addTo(geojson.crosswalk)
   }
 })
+*/
 
 /* Core function */
 function getPigeon(e, comment="") {
@@ -54,7 +105,7 @@ function getPigeon(e, comment="") {
     disableReload()
 
     // Fetch parameters
-    coords = e.latlng
+    coords = { lat : e.coordinate[1], lng : e.coordinate[0]}
     c0 = document.getElementById("C0").value
     c1 = document.getElementById("C1").value
     c2 = document.getElementById("C2").value
@@ -79,39 +130,13 @@ function getPigeon(e, comment="") {
       document.getElementById("download_button").className = "button"
 
       // Clear layers
-      geojson_intersection.clearLayers()
-      for(id of Object.keys(geojson)) {
-        geojson[id].clearLayers()
-      }
+      geojson_intersection.getSource().clear()
 
       // Add new layers
       json_data = JSON.parse(data[2])
       if(Object.keys(json_data).length > 0) {
-        geojson_intersection.addData(JSON.parse(data[2]))
-      }
-      geojson_intersection.eachLayer(function(layer) {
-          switch(layer.feature.properties.type) {
-            case "branch":
-              geojson.branch.addData(layer.feature)
-              break
-            case "crosswalk":
-              geojson.crosswalk.addData(layer.feature)
-              break
-            case "crossing":
-              if(layer.feature.geometry.type == "LineString") {
-                geojson.crossing_shadow.addData(layer.feature)
-                geojson.crossing.addData(layer.feature)
-              }
-              break
-            case "way":
-              geojson.ways.addData(layer.feature)
-              break
-          }
-      })
-
-      // Reorder layers
-      for(id of Object.keys(geojson)) {
-        geojson[id].bringToFront()
+        features = new ol.format.GeoJSON().readFeatures(json_data)
+        geojson_intersection.getSource().addFeatures(features)
       }
 
       // Update content according to fetched data
@@ -148,12 +173,12 @@ function getPigeon(e, comment="") {
 /* Handler functions */
 
 function reloadPigeon() {
-  getPigeon({latlng : coords})
+  getPigeon({coordinate: [coords.lng, coords.lat]})
 }
 
 function sendComment() {
   comment = document.getElementById("comment_text").value
-  getPigeon({latlng : coords}, comment)
+  getPigeon({coordinate: [coords.lng, coords.lat]}, comment)
 }
 
 function downloadData() {
@@ -233,24 +258,32 @@ function resetSliders() {
 /* Initialisation function */
 function init() {
 
-  // Init map and controls
-  map= L.map('map', {attributionControl: false}).setView([46.8, 2.52], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap',
-    opacity : 0.7
-  }).addTo(map);
-  L.control.attribution({
-    position: 'topright'
-  }).addTo(map);
-
-  // Add layers to map
-  for(id of Object.keys(geojson)) {
-    geojson[id].addTo(map)
-  }
+  map = new ol.Map({
+    layers: [
+      new ol.layer.Tile({
+        source: new ol.source.XYZ({
+          url: 'https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+          attributions: "Contributeurs OpenStreetMap ©"
+        }),
+        opacity: 0.7
+      }),
+      geojson_intersection
+    ],
+    view: new ol.View({
+      center: [4.658,47.123],
+      zoom: 6,
+      maxZoom: 20
+    }),
+    controls: ol.control.defaults.defaults({attribution: false}).extend([
+      new ol.control.Attribution({
+        collapsible: false,
+      })
+    ]),
+    target: 'map',
+  })
 
   // Enable interaction on the map to get the description
-  map.on("click", getPigeon);
+  map.on("singleclick", getPigeon);
 
   // Reinit some UI elements
   document.getElementById("comment_text").value = ""
@@ -264,7 +297,8 @@ function init() {
     params = url_params.get("request").split("/")
     x = Number(params[0])
     y = Number(params[1])
-    map.setView([x,y], 18);
+    map.getView().setCenter([y,x]);
+    map.getView().setZoom(18);
     coords = {lat : x, lng: y}
     reloadPigeon()
   } catch {
@@ -274,15 +308,14 @@ function init() {
       z = Number(params[0])
       x = Number(params[1])
       y = Number(params[2])
-      map.setView([x,y], z);
-    } catch {
-      map.setView([47.123,4.658], 6);
-    }
+      map.getView().setCenter([y,x]);
+      map.getView().setZoom(z);
+    } catch {}
   }
 
   // reencode the window location in the url
-  map.on('moveend zoomend', function() {
-    params = "map="+map.getZoom()+"/"+map.getCenter().lat+"/"+map.getCenter().lng
+  map.on('moveend', function() {
+    params = "map="+map.getView().getZoom().toFixed()+"/"+map.getView().getCenter()[1].toFixed(5)+"/"+map.getView().getCenter()[0].toFixed(5)
     url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params;
     window.history.pushState({path: url}, '', url);
   });

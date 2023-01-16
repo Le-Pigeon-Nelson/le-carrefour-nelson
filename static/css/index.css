@@ -65,6 +65,11 @@ header h1 {
   transition: all .5s linear;
 }
 
+.ol-attribution {
+  top: 0;
+  height: 20px;
+}
+
 #content {
   height : 40vh;
   width: 100vw-20px;
