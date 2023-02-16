@@ -1,51 +1,57 @@
 var map;
 var uid = Math.random().toString(36).slice(2);
 var branch_colors = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999"]
-nb_branch = 0
 coords = null
 requesting = false
 
+// Use geographic coordinates
+ol.proj.useGeographic()
+
 /* Data files */
-var geojson_intersection = L.geoJSON(null)
-geojson = {}
-geojson.ways = L.geoJSON(null, {
-  style : {color: "#555555", weight: 1}
-})
-geojson.branch = L.geoJSON(null, {
-  style : function(feature) {
-    branch_number = parseInt(feature.properties.name.substr(9).split("|")[0].trim())
-    if(branch_number > nb_branch)
-      nb_branch = branch_number
-    return {
-      color: branch_colors[(branch_number-1)%branch_colors.length],
-      weight : 5
+var geojson_intersection = new ol.layer.Vector({
+  source : new ol.source.Vector(),
+  style : function(feature, resolution) {
+    switch(feature.get("type")) {
+
+      case "branch":
+        branch_number = parseInt(feature.get("name").substr(9).split("|")[0].trim())
+        return new ol.style.Style({
+          stroke : new ol.style.Stroke({
+            color: branch_colors[(branch_number-1)%branch_colors.length],
+            width : 5
+          })
+        });
+
+      case "crosswalk":
+        return new ol.style.Style({
+          image : new ol.style.Circle({
+            radius: 5,
+            fill: new ol.style.Fill({
+              color: 'black'
+            })
+          })
+        });
+
+      case "crossing":
+        return new ol.style.Style({
+          stroke : new ol.style.Stroke({
+            color: 'black',
+            width: 2,
+            lineDash: [6,6]
+          })
+        });
+        break;
+
+      case "way":
+        return new ol.style.Style({
+          stroke : new ol.style.Stroke({
+            color: 'black',
+          })
+        });
+
     }
-  },
-  onEachFeature: function(feature, layer) {
-    layer.bindPopup(feature.properties.description)
   }
-})
-geojson.crossing_shadow = L.geoJSON(null, {
-  style : {color: "#ffffff", weight: 5, opacity: 0},
-  onEachFeature: function(feature, layer) {
-    layer.bindPopup(feature.properties.description)
-  }
-})
-geojson.crossing = L.geoJSON(null, {
-  style : {color: "#222222", weight: 2, dashArray : "5, 5"},
-  onEachFeature: function(feature, layer) {
-    layer.bindPopup(feature.properties.description)
-  }
-})
-geojson.crosswalk = L.geoJSON(null, {
-  style: {weight: 0},
-  pointToLayer: function(feature, coords) {
-    if(feature.properties.type == "crosswalk")
-      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1})
-      .bindPopup(feature.properties.description)
-      .addTo(geojson.crosswalk)
-  }
-})
+});
 
 /* Core function */
 function getPigeon(e, comment="") {
@@ -54,7 +60,7 @@ function getPigeon(e, comment="") {
     disableReload()
 
     // Fetch parameters
-    coords = e.latlng
+    coords = { lat : e.coordinate[1], lng : e.coordinate[0]}
     c0 = document.getElementById("C0").value
     c1 = document.getElementById("C1").value
     c2 = document.getElementById("C2").value
@@ -79,39 +85,15 @@ function getPigeon(e, comment="") {
       document.getElementById("download_button").className = "button"
 
       // Clear layers
-      geojson_intersection.clearLayers()
-      for(id of Object.keys(geojson)) {
-        geojson[id].clearLayers()
-      }
+      geojson_intersection.getSource().clear()
 
       // Add new layers
       json_data = JSON.parse(data[2])
+      nb_branch = 0
       if(Object.keys(json_data).length > 0) {
-        geojson_intersection.addData(JSON.parse(data[2]))
-      }
-      geojson_intersection.eachLayer(function(layer) {
-          switch(layer.feature.properties.type) {
-            case "branch":
-              geojson.branch.addData(layer.feature)
-              break
-            case "crosswalk":
-              geojson.crosswalk.addData(layer.feature)
-              break
-            case "crossing":
-              if(layer.feature.geometry.type == "LineString") {
-                geojson.crossing_shadow.addData(layer.feature)
-                geojson.crossing.addData(layer.feature)
-              }
-              break
-            case "way":
-              geojson.ways.addData(layer.feature)
-              break
-          }
-      })
-
-      // Reorder layers
-      for(id of Object.keys(geojson)) {
-        geojson[id].bringToFront()
+        features = new ol.format.GeoJSON().readFeatures(json_data)
+        nb_branch = parseInt(features.filter(f => f.values_.type == "branch").at(-1).values_.name.substr(9).split("|")[0].trim())
+        geojson_intersection.getSource().addFeatures(features)
       }
 
       // Update content according to fetched data
@@ -121,7 +103,6 @@ function getPigeon(e, comment="") {
       }
       legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Passage piéton : <span style='color: #222222'>⬤</span><br/>Traversée : <span style='color: #222222'>- - -</span><br/><br/><br/>"
       document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
-      nb_branch = 0
 
       // Display a message to indicate that the comment was sent 
       if(comment != "") {
@@ -148,12 +129,12 @@ function getPigeon(e, comment="") {
 /* Handler functions */
 
 function reloadPigeon() {
-  getPigeon({latlng : coords})
+  getPigeon({coordinate: [coords.lng, coords.lat]})
 }
 
 function sendComment() {
   comment = document.getElementById("comment_text").value
-  getPigeon({latlng : coords}, comment)
+  getPigeon({coordinate: [coords.lng, coords.lat]}, comment)
 }
 
 function downloadData() {
@@ -233,24 +214,62 @@ function resetSliders() {
 /* Initialisation function */
 function init() {
 
-  // Init map and controls
-  map= L.map('map', {attributionControl: false}).setView([46.8, 2.52], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap',
-    opacity : 0.7
-  }).addTo(map);
-  L.control.attribution({
-    position: 'topright'
-  }).addTo(map);
+  closer = document.getElementById('popup-closer');
+  overlay = new ol.Overlay({
+    element: document.getElementById('popup'),
+    autoPan: {
+      animation: {
+        duration: 250,
+      }
+    }
+  });
 
-  // Add layers to map
-  for(id of Object.keys(geojson)) {
-    geojson[id].addTo(map)
-  }
+  closer.onclick = function () {
+    overlay.setPosition(undefined);
+    closer.blur();
+    return false;
+  };
+
+  map = new ol.Map({
+    layers: [
+      new ol.layer.Tile({
+        source: new ol.source.XYZ({
+          url: 'https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+          attributions: "Contributeurs OpenStreetMap ©"
+        }),
+        opacity: 0.7
+      }),
+      geojson_intersection
+    ],
+    view: new ol.View({
+      center: [4.658,47.123],
+      zoom: 6,
+      maxZoom: 20
+    }),
+    controls: ol.control.defaults.defaults({attribution: false}).extend([
+      new ol.control.Attribution({
+        collapsible: false,
+      })
+    ]),
+    overlays: [overlay],
+    target: 'map',
+  })
 
   // Enable interaction on the map to get the description
-  map.on("click", getPigeon);
+  map.on("singleclick", function(e) {
+    var features = [];
+    map.forEachFeatureAtPixel(e.pixel, function(feature, layer) {
+      features.push(feature);
+    });
+    feature = features[0]
+    if(feature && ["branch", "crosswalk", "crossing"].includes(feature.values_.type)) {
+      document.getElementById('popup-content').innerHTML = feature.values_.description;
+      overlay.setPosition(e.coordinate);
+    } else {
+      overlay.setPosition(undefined);
+      getPigeon(e);
+    }
+  });
 
   // Reinit some UI elements
   document.getElementById("comment_text").value = ""
@@ -264,7 +283,8 @@ function init() {
     params = url_params.get("request").split("/")
     x = Number(params[0])
     y = Number(params[1])
-    map.setView([x,y], 18);
+    map.getView().setCenter([y,x]);
+    map.getView().setZoom(18);
     coords = {lat : x, lng: y}
     reloadPigeon()
   } catch {
@@ -274,15 +294,14 @@ function init() {
       z = Number(params[0])
       x = Number(params[1])
       y = Number(params[2])
-      map.setView([x,y], z);
-    } catch {
-      map.setView([47.123,4.658], 6);
-    }
+      map.getView().setCenter([y,x]);
+      map.getView().setZoom(z);
+    } catch {}
   }
 
   // reencode the window location in the url
-  map.on('moveend zoomend', function() {
-    params = "map="+map.getZoom()+"/"+map.getCenter().lat+"/"+map.getCenter().lng
+  map.on('moveend', function() {
+    params = "map="+map.getView().getZoom().toFixed()+"/"+map.getView().getCenter()[1].toFixed(5)+"/"+map.getView().getCenter()[0].toFixed(5)
     url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params;
     window.history.pushState({path: url}, '', url);
   });
