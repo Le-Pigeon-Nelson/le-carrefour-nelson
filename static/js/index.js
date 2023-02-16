@@ -55,48 +55,6 @@ var geojson_intersection = new ol.layer.Vector({
     }
   }
 });
-/*
-var geojson_intersection = L.geoJSON(null)
-geojson = {}
-geojson.ways = L.geoJSON(null, {
-  style : {color: "#555555", weight: 1}
-})
-geojson.branch = L.geoJSON(null, {
-  style : function(feature) {
-    branch_number = parseInt(feature.properties.name.substr(9).split("|")[0].trim())
-    if(branch_number > nb_branch)
-      nb_branch = branch_number
-    return {
-      color: branch_colors[(branch_number-1)%branch_colors.length],
-      weight : 5
-    }
-  },
-  onEachFeature: function(feature, layer) {
-    layer.bindPopup(feature.properties.description)
-  }
-})
-geojson.crossing_shadow = L.geoJSON(null, {
-  style : {color: "#ffffff", weight: 5, opacity: 0},
-  onEachFeature: function(feature, layer) {
-    layer.bindPopup(feature.properties.description)
-  }
-})
-geojson.crossing = L.geoJSON(null, {
-  style : {color: "#222222", weight: 2, dashArray : "5, 5"},
-  onEachFeature: function(feature, layer) {
-    layer.bindPopup(feature.properties.description)
-  }
-})
-geojson.crosswalk = L.geoJSON(null, {
-  style: {weight: 0},
-  pointToLayer: function(feature, coords) {
-    if(feature.properties.type == "crosswalk")
-      L.circle(coords, 0.8, {color: "#000000", fillColor: "#000000", fillOpacity: 1})
-      .bindPopup(feature.properties.description)
-      .addTo(geojson.crosswalk)
-  }
-})
-*/
 
 /* Core function */
 function getPigeon(e, comment="") {
@@ -258,6 +216,22 @@ function resetSliders() {
 /* Initialisation function */
 function init() {
 
+  closer = document.getElementById('popup-closer');
+  overlay = new ol.Overlay({
+    element: document.getElementById('popup'),
+    autoPan: {
+      animation: {
+        duration: 250,
+      }
+    }
+  });
+
+  closer.onclick = function () {
+    overlay.setPosition(undefined);
+    closer.blur();
+    return false;
+  };
+
   map = new ol.Map({
     layers: [
       new ol.layer.Tile({
@@ -279,11 +253,25 @@ function init() {
         collapsible: false,
       })
     ]),
+    overlays: [overlay],
     target: 'map',
   })
 
   // Enable interaction on the map to get the description
-  map.on("singleclick", getPigeon);
+  map.on("singleclick", function(e) {
+    var features = [];
+    map.forEachFeatureAtPixel(e.pixel, function(feature, layer) {
+      features.push(feature);
+    });
+    feature = features[0]
+    if(feature && ["branch", "crosswalk", "crossing"].includes(feature.values_.type)) {
+      document.getElementById('popup-content').innerHTML = feature.values_.description;
+      overlay.setPosition(e.coordinate);
+    } else {
+      overlay.setPosition(undefined);
+      getPigeon(e);
+    }
+  });
 
   // Reinit some UI elements
   document.getElementById("comment_text").value = ""
