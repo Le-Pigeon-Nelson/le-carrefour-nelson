@@ -1,7 +1,6 @@
 var map;
 var uid = Math.random().toString(36).slice(2);
 var branch_colors = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999"]
-nb_branch = 0
 coords = null
 requesting = false
 
@@ -16,8 +15,6 @@ var geojson_intersection = new ol.layer.Vector({
 
       case "branch":
         branch_number = parseInt(feature.get("name").substr(9).split("|")[0].trim())
-        if(branch_number > nb_branch)
-          nb_branch = branch_number
         return new ol.style.Style({
           stroke : new ol.style.Stroke({
             color: branch_colors[(branch_number-1)%branch_colors.length],
@@ -92,8 +89,10 @@ function getPigeon(e, comment="") {
 
       // Add new layers
       json_data = JSON.parse(data[2])
+      nb_branch = 0
       if(Object.keys(json_data).length > 0) {
         features = new ol.format.GeoJSON().readFeatures(json_data)
+        nb_branch = parseInt(features.filter(f => f.values_.type == "branch").at(-1).values_.name.substr(9).split("|")[0].trim())
         geojson_intersection.getSource().addFeatures(features)
       }
 
@@ -104,7 +103,6 @@ function getPigeon(e, comment="") {
       }
       legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Passage piéton : <span style='color: #222222'>⬤</span><br/>Traversée : <span style='color: #222222'>- - -</span><br/><br/><br/>"
       document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
-      nb_branch = 0
 
       // Display a message to indicate that the comment was sent 
       if(comment != "") {
