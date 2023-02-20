@@ -25,6 +25,10 @@ def generateDescription(pigeon, uid, latitude : float, longitude : float, c0: fl
         f.write(model.getJSON())
         f.close()
 
+    with open("cache/"+uid+"/model.geojson", "w") as f:
+        f.write(model.getGeoJSON())
+        f.close()
+
     desc = cd.CrDesc()
     desc.loadModel("cache/"+uid+"/model.json")
     description = desc.generateDescription()["structure"]
@@ -37,4 +41,4 @@ def generateDescription(pigeon, uid, latitude : float, longitude : float, c0: fl
 
     # create Pigeon Nelson
     pigeon.setMessage(text, "fr", 1)
-    pigeon.setGeoJson(desc.getGeoJSON(description))
+    pigeon.setGeoJson(desc.getGeoJSON("cache/"+uid+"/model.geojson", description))

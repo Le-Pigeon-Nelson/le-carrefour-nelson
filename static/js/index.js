@@ -14,7 +14,7 @@ var geojson_intersection = new ol.layer.Vector({
     switch(feature.get("type")) {
 
       case "branch":
-        branch_number = parseInt(feature.get("name").substr(9).split("|")[0].trim())
+        branch_number = parseInt(feature.get("id"))
         return new ol.style.Style({
           stroke : new ol.style.Stroke({
             color: branch_colors[(branch_number-1)%branch_colors.length],
