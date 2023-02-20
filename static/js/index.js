@@ -138,7 +138,7 @@ function sendComment() {
 }
 
 function downloadData() {
-    data = JSON.stringify(geojson_intersection.toGeoJSON())
+    data = new ol.format.GeoJSON().writeFeatures(geojson_intersection.getSource().getFeatures()) 
     data_holder = document.createElement('a');
     data_holder.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
     data_holder.setAttribute('download', "carrefour.geojson");
