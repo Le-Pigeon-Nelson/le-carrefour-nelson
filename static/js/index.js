@@ -92,7 +92,7 @@ function getPigeon(e, comment="") {
       nb_branch = 0
       if(Object.keys(json_data).length > 0) {
         features = new ol.format.GeoJSON().readFeatures(json_data)
-        nb_branch = parseInt(features.filter(f => f.values_.type == "branch").at(-1).values_.name.substr(9).split("|")[0].trim())
+        nb_branch = parseInt(features.filter(f => f.values_.type == "branch").at(-1).values_.id)
         geojson_intersection.getSource().addFeatures(features)
       }
 
