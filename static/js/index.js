@@ -54,7 +54,7 @@ var geojson_intersection = new ol.layer.Vector({
 });
 
 /* Core function */
-function getPigeon(e, comment="") {
+function getApi(e, comment="") {
   if(!requesting){
     requesting = true
     disableReload()
@@ -72,10 +72,9 @@ function getPigeon(e, comment="") {
     document.getElementById("content").innerHTML = '<div id="loading" class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>'
     
     // Fetch data from the API. Timeout of 10s.
-    fetchTimeout(window.location.origin+window.location.pathname+"pigeon"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment, 10000).then(function(response) {
+    fetchTimeout(window.location.origin+window.location.pathname+"api"+"?lat="+coords.lat+"&lng="+coords.lng+"&c0="+c0+"&c1="+c1+"&c2="+c2+"&uid="+uid+"&comment="+comment, 10000).then(function(response) {
       return response.json();
     }).then(function(data) {
-
       // Put the content back on the page
       document.getElementById("content").innerHTML = content
       document.getElementById("C0").value = c0
@@ -88,7 +87,7 @@ function getPigeon(e, comment="") {
       geojson_intersection.getSource().clear()
 
       // Add new layers
-      json_data = JSON.parse(data[2])
+      json_data = JSON.parse(data[1])
       nb_branch = 0
       if(Object.keys(json_data).length > 0) {
         features = new ol.format.GeoJSON().readFeatures(json_data)
@@ -102,7 +101,7 @@ function getPigeon(e, comment="") {
         legend += "<span style='color:"+branch_colors[i%branch_colors.length]+"'><strong>––</strong></span> "
       }
       legend += "<br/>Intérieur du carrefour : <span style='color: #000000'>––</span><br/>Passage piéton : <span style='color: #222222'>⬤</span><br/>Traversée : <span style='color: #222222'>- - -</span><br/><br/><br/>"
-      document.getElementById("text").innerHTML = legend + data[1].txt.replace(/\n/g, "<br/><br/>")
+      document.getElementById("text").innerHTML = legend + data[0].txt.replace(/\n/g, "<br/><br/>")
 
       // Display a message to indicate that the comment was sent 
       if(comment != "") {
@@ -128,13 +127,13 @@ function getPigeon(e, comment="") {
 
 /* Handler functions */
 
-function reloadPigeon() {
-  getPigeon({coordinate: [coords.lng, coords.lat]})
+function reloadApi() {
+  getApi({coordinate: [coords.lng, coords.lat]})
 }
 
 function sendComment() {
   comment = document.getElementById("comment_text").value
-  getPigeon({coordinate: [coords.lng, coords.lat]}, comment)
+  getApi({coordinate: [coords.lng, coords.lat]}, comment)
 }
 
 function downloadData() {
@@ -267,7 +266,7 @@ function init() {
       overlay.setPosition(e.coordinate);
     } else {
       overlay.setPosition(undefined);
-      getPigeon(e);
+      getApi(e);
     }
   });
 
@@ -286,7 +285,7 @@ function init() {
     map.getView().setCenter([y,x]);
     map.getView().setZoom(18);
     coords = {lat : x, lng: y}
-    reloadPigeon()
+    reloadApi()
   } catch {
     // Add view parameters to the window, mainly to keep the current view on reload
     try {

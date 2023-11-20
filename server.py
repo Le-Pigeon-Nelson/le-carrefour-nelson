@@ -6,7 +6,7 @@ from importlib.metadata import version
 import random
 import string
 import traceback
-from pigeon import *
+from crwebapi import *
 from description import *
 from flask import Flask, request
 
@@ -43,8 +43,8 @@ app = Flask(__name__)
 def html():
     return app.send_static_file('index.html')
 
-@app.route("/pigeon")
-def send_pigeon():
+@app.route("/api")
+def api_route():
 
     args = request.args
     selfdescription, lat, lng, c0, c1, c2, uid, comment = args.get("self-description"), args.get("lat"), args.get("lng"), args.get("c0"), args.get("c1"), args.get("c2"), args.get("uid"), args.get("comment")
@@ -54,23 +54,23 @@ def send_pigeon():
         c1 = 2
         c2 = 4
 
-    pigeon = PigeonNelson("Crossroads Describer", "Décrire un carrefour proche de sa position", "UTF-8", 0)
+    api = CrWebApi()
 
     if lat and lng and uid:
         shutil.rmtree("cache/"+uid, ignore_errors=True), shutil.os.mkdir("cache/"+uid)
         error = None
         try:
-            generateDescription(pigeon, uid, float(lat), float(lng), float(c0), float(c1), float(c2))
+            generateDescription(api, uid, float(lat), float(lng), float(c0), float(c1), float(c2))
         except Exception as e:
             error = traceback.format_exc()
-            pigeon.setMessage("Erreur lors de la génération de la description. Veuillez essayer un autre carrefour.", "fr", 1)
-            pigeon.setGeoJson("{}")
+            api.setMessage("Erreur lors de la génération de la description. Veuillez essayer un autre carrefour.")
+            api.setGeoJson("{}")
             
         if comment is not None and len(comment) == 0 : comment = None
 
         log(uid, lat, lng, c0, c1, c2, error, comment)
 
-    return pigeon.getJson()
+    return api.getJson()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(shutil.os.environ.get("PORT", 8080)))
